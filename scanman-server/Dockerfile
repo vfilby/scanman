@@ -1,100 +1,47 @@
-FROM phusion/baseimage:bionic-1.0.0
+# Grace à https://sourcery.ai/blog/python-docker/
+FROM python:3.9-slim-buster as base
 
-ENV WAIT_ON_TRANSFER_TOKEN=false
+# Setup env
+ENV LANG C.UTF-8
+ENV LC_ALL C.UTF-8
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONFAULTHANDLER 1
+
+# App specific env
 ENV SETTLE_DURATION=5
-ENV ENABLE_SSH_SERVER=true
 ENV INTAKE_DIR=/scanman/intake
 ENV COMPLETED_DIR=/scanman/completed
 
-# Use baseimage-docker's init system.
-CMD ["/sbin/my_init"]
+FROM base AS python-deps
 
-# SSHD Config
-#
-RUN rm -f /etc/service/sshd/down
+# Install pipenv and compilation dependencies
+RUN pip install pipenv
+RUN apt-get update && apt-get install -y --no-install-recommends gcc
 
-# Regenerate SSH host keys. baseimage-docker does not contain any, so you
-# have to do that yourself. You may also comment out this instruction; the
-# init system will auto-generate one during boot.
-RUN /etc/my_init.d/00_regen_ssh_host_keys.sh
-ADD config/my_init.d/set_authorized_ssh_keys.sh /etc/my_init.d/set_authorized_ssh_keys.sh
-RUN chmod +x /etc/my_init.d/set_authorized_ssh_keys.sh
-
-# ScanMan Config
-#
-RUN add-apt-repository -y ppa:deadsnakes/ppa
-RUN apt-get update && apt-get install -y --no-install-recommends \
-  python3 \
-  python3-venv \
-  python3-setuptools \
-  python3-pip \
-  libyaml-dev \
-  netpbm \
-  ghostscript \
-  poppler-utils \
-  imagemagick \
-  unpaper \
-  util-linux \
-  tesseract-ocr \
-  parallel \
-  units \
-  ssh \
-  git \
-  vim \
-  bc
+# Install python dependencies in /.venv
+COPY Pipfile .
+COPY Pipfile.lock .
+RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
 
 
-# # RUN git clone --branch dir-option https://github.com/vfilby/sane-scan-pdf.git
+FROM base AS runtime
 
-#
-#
-# COPY test-data test-data
+# Copy virtual env from python-deps stage
+COPY --from=python-deps /.venv /.venv
+ENV PATH="/.venv/bin:$PATH"
+
+# Create and switch to a new user
+RUN useradd --create-home scanman
+RUN mkdir /scanman && chown scanman scanman
+USER scanman
+
 WORKDIR /scanman
-COPY app/* /scanman/
-#COPY Pipfile* /scanman/
-COPY .build/requirements.txt requirements.txt
-RUN pip3 install -r requirements.txt
-RUN chmod +x scanman.py
 
+# Install application into container
+COPY app /scanman/
 RUN mkdir -p /scanman/intake
 RUN mkdir -p /scanman/completed
 
-# Docker/Python Version/Venv dance
-# See: https://pythonspeed.com/articles/activate-virtualenv-dockerfile/
-
-#ENV VIRTUAL_ENV=/opt/venv
-#RUN python3 -m venv $VIRTUAL_ENV
-#ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-#RUN pipenv install
-
-
-RUN mkdir -p /etc/service/scanman
-COPY config/scanman_run /etc/service/scanman/run
-RUN chmod +x /etc/service/scanman/run
-
-
-
-
-# RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-#
-# ADD run.sh /run.sh
-
-# RUN chmod +x /*.sh
-
-#RUN mkdir -p /var/run/sshd && sed -i "s/UsePrivilegeSeparation.*/UsePrivilegeSeparation no/g" /etc/ssh/sshd_config \
-#  && sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config \
-#  && touch /root/.Xauthority \
-#  && true
-
-
-
-
-
-#
-#
-#
-
-# VOLUME ['/scanman/dropbox','/scanman/completed']
-#
-#
-# EXPOSE 22
+# Run the application
+#ENTRYPOINT ["python", "/scanman/scanman.py" ]
+CMD [ "python", "/scanman/scanman.py" ]

@@ -4,12 +4,9 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-watchdog = "*"
-pyyaml = "*"
-argh = "*"
-argparse = "*"
+watchdog = "==0.10.2"
 
 [dev-packages]
 
 [requires]
-python_version = "> 3.5"
+python_version = "3.9"
