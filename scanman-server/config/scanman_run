@@ -1,4 +1,0 @@
-#!/bin/sh
-
-cd /scanman #&& exec pipenv shell
-exec ./scanman.py >> /var/log/scanman.log 2>&1

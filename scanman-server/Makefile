@@ -24,7 +24,11 @@ docker-shell: docker runtime-config
 	docker run -it -v $(shell pwd)/runtime/intake:/scanman/intake scanman:development bash
 
 env:
+	pipenv install
 	pipenv shell
 
 clean:
 	rm -rf runtime
+
+clean-env: clean
+	@echo "Exit the pipenv shell and run 'pipenv --rm'"
