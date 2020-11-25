@@ -55,7 +55,6 @@ WORKDIR /scanman
 
 # Install application into container
 COPY app /scanman/
-RUN git clone --branch dir-option https://github.com/vfilby/sane-scan-pdf.git
 RUN mkdir -p /scanman/intake
 RUN mkdir -p /scanman/completed
 
