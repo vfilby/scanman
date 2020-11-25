@@ -47,9 +47,13 @@ COPY --from=python-deps /.venv /.venv
 ENV PATH="/.venv/bin:$PATH"
 
 # Create and switch to a new user
-RUN useradd --create-home scanman
-RUN mkdir /scanman && chown scanman scanman
-USER scanman
+# disabling for now while I sort out how to handling permissions on the intake
+# volume
+#RUN useradd --create-home scanman
+#RUN mkdir /scanman && chown scanman scanman
+#USER scanman
+
+RUN mkdir /scanman
 
 WORKDIR /scanman
 
