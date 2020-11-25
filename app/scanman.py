@@ -36,7 +36,7 @@ class FileWatcherEventHandler(FileSystemEventHandler):
 
 def configure_logger():
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging.INFO,
         format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
         datefmt="%H:%M:%S",
         stream=sys.stdout)
@@ -92,7 +92,7 @@ def process_scan( path ):
                       rotate_pages_threshold=13,
                       deskew=True,
                       clean=True )
-                      
+
     except Exception as e:
         log.error( e )
         return
