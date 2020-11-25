@@ -5,6 +5,8 @@ name = "pypi"
 
 [packages]
 watchdog = "==0.10.2"
+img2pdf = "*"
+ocrmypdf = "*"
 
 [dev-packages]
 

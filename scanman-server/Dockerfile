@@ -26,6 +26,22 @@ RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
 
 FROM base AS runtime
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  netpbm \
+  ghostscript \
+  poppler-utils \
+  imagemagick \
+  unpaper \
+  util-linux \
+  tesseract-ocr \
+  parallel \
+  units \
+  ssh \
+  git \
+  vim \
+  bash \
+  bc
+
 # Copy virtual env from python-deps stage
 COPY --from=python-deps /.venv /.venv
 ENV PATH="/.venv/bin:$PATH"
@@ -39,6 +55,7 @@ WORKDIR /scanman
 
 # Install application into container
 COPY app /scanman/
+RUN git clone --branch dir-option https://github.com/vfilby/sane-scan-pdf.git
 RUN mkdir -p /scanman/intake
 RUN mkdir -p /scanman/completed
 
