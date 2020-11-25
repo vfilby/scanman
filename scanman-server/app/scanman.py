@@ -6,6 +6,8 @@ import queue
 import logging
 import multiprocessing
 import subprocess
+import ocrmypdf
+import glob
 from subprocess import Popen
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
@@ -17,6 +19,7 @@ EVENT_TIMEOUT=5
 COMPLETED_TRIGGER="._complete"
 WATCH_PATH=os.environ['INTAKE_DIR']
 COMPLETED_PATH=os.environ['COMPLETED_DIR']
+SCAN_PREFIX="scan-"
 
 class FileWatcherEventHandler(FileSystemEventHandler):
     log = logging.getLogger("FileWatcherEventHandler")
@@ -47,8 +50,12 @@ def process_scan( path ):
     log.info( "Processing Scan" )
     base_path = os.path.normpath( WATCH_PATH )
     scan_directory = os.path.normpath( os.path.dirname( path ) )
-    filename = "%s.pdf" % os.path.basename( scan_directory )
-    out_path = os.path.join(COMPLETED_PATH, filename)
+    scan_pattern = os.path.join( scan_directory, "%s*"%SCAN_PREFIX )
+
+    filename = "%s" % os.path.basename( scan_directory )
+    out_path = "%s.pdf"%os.path.join(COMPLETED_PATH, filename)
+    no_ocr_path = "%s.no_ocr.pdf"%os.path.join(base_path, filename)
+
 
     log.debug( "base_path, scan_directory: (%s, %s)" %(base_path,scan_directory) )
 
@@ -59,19 +66,22 @@ def process_scan( path ):
     stdout_reader = lambda line: log.info( line )
     stderr_reader = lambda line: log.error( line )
 
-    cmd = ["/scanman/sane-scan-pdf/scan","-dir",scan_directory,"-o",out_path]
-    log.debug( cmd )
-    log.info( "Starting sane-scan-pdf..." )
+    #cmd = ["/scanman/sane-scan-pdf/scan","-dir",scan_directory,"-o",out_path]
+    scan_files = sorted( glob.glob(scan_pattern) )
+    cmd = ["img2pdf", "-v", "-o", no_ocr_path] + scan_files
     log.info( "cmd: %s" % " ".join( cmd ) )
     try:
         p = Popen( cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
-        Thread( target=consume_lines, args=[p.stdout, log.info] ).start()
-        Thread( target=consume_lines, args=[p.stderr, log.error] ).start()
+        Thread( target=consume_lines, args=[p.stdout, log.debug] ).start()
+        Thread( target=consume_lines, args=[p.stderr, log.debug] ).start()
         p.wait()
     except FileNotFoundError as fnfe:
         log.error( fnfe )
 
-    log.debug( "End of external process" )
+
+    ocrmypdf.ocr( no_ocr_path, out_path, rotate_pages=True, deskew=True, clean=True )
+
+
 
     # popen that thing
 
