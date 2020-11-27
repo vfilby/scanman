@@ -58,7 +58,7 @@ RUN mkdir /scanman
 WORKDIR /scanman
 
 # Install application into container
-COPY app /scanman/
+COPY scanman /scanman/
 RUN mkdir -p /scanman/intake
 RUN mkdir -p /scanman/completed
 

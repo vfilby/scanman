@@ -9,6 +9,9 @@ img2pdf = "*"
 ocrmypdf = "*"
 
 [dev-packages]
+pytest = "*"
+pytest-print = "*"
+pytest-optional-tests = "*"
 
 [requires]
 python_version = "3.9"
