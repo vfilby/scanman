@@ -18,6 +18,7 @@ from logpipe import LogPipe
 # environment vars
 watch_path_env = "INTAKE_DIR"
 completed_path_env = "COMPLETED_DIR"
+pdf_completed_hook_env = "PDF_COMPLETED_HOOK"
 
 
 def consume_lines(pipe, consume):
@@ -26,12 +27,14 @@ def consume_lines(pipe, consume):
             consume(line)
 
 class Scanman:
-    def __init__( self, watch_path = None, completed_path = None, sleep_time = 20, delete_files = True):
+    def __init__( self, watch_path = None, completed_path = None,
+                        sleep_time = 20, delete_files = True, pdf_completed_hook = None ):
         self.watch_path = watch_path
         self.completed_path = completed_path
         self.manifest_filename = "file_manifest"
         self.sleep_time = sleep_time or 30
         self.delete_files = delete_files
+        self.pdf_completed_hook = pdf_completed_hook
 
 
         logging.debug( "Scanman initialized (" +
@@ -95,10 +98,38 @@ class Scanman:
             logging.info( "Cleaning out '%s'" % scan_path )
             shutil.rmtree( scan_path )
 
+        try:
+            self.run_pdf_completed_hook( scan_name, out_path )
+        except Exception as e:
+            logging.exception( "Exception ocurred running pdf_completed_hook" )
+
+
         logging.info( "Processing completed for %s" % out_path )
         return True
 
+    def run_pdf_completed_hook( self, scan_name, out_path ):
 
+        if pdf_completed_hook is None:
+            return
+        logging.info( "Running pdf_completed_hook" )
+
+        cmd = pdf_completed_hook.split() + [scan_name, out_path]
+        logging.debug( " ".join( cmd ) )
+        logging.info( cmd )
+
+        try:
+            logpipe = LogPipe(logging.INFO)
+            with subprocess.Popen(cmd, stdout=logpipe, stderr=logpipe ) as s:
+                s.communicate()
+                logpipe.close()
+
+        except FileNotFoundError as e:
+            logging.error( e )
+            logpipe.close()
+            return False
+
+        if s.returncode != 0:
+            logging.error( "pdf_completed_hook return non-zero result (%d)" % s.returncode )
 
     def validate_scan_files( self, scan_path ):
         logging.info( "Validating '%s'" % scan_path )
@@ -223,5 +254,10 @@ if __name__ == "__main__":
     if completed_path is None:
         raise EvironmentError( "%s is not set." % completed_path_env )
 
-    s = Scanman( watch_path=watch_path, completed_path=completed_path, delete_files=True)
+    pdf_completed_hook = os.environ.get( pdf_completed_hook_env )
+
+    s = Scanman( watch_path=watch_path,
+                 completed_path=completed_path,
+                 pdf_completed_hook=pdf_completed_hook,
+                 delete_files=True)
     s.run()

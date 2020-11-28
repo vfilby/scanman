@@ -11,6 +11,7 @@
 local-run: runtime-config
 	INTAKE_DIR=runtime/intake \
 	COMPLETED_DIR=runtime/completed \
+	PDF_COMPLETED_HOOK="./test-data/test_complete_hook.sh" \
 	python scanman/scanman.py
 
 docker:
