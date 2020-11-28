@@ -1,6 +1,6 @@
 ## Summary
 
-I was looking for a way to untether my Fujitsu ix500 from a laptop to make it a general networked scanner that would create searchable .pdf's and leave them on a network share.  Originally I tried running this solely on a Raspberry Pi as demonstrated (like [this](https://chrisschuld.com/2020/01/network-scanner-with-scansnap-and-raspberry-pi/)) but this was prohibitively slow.  Even on the Pi 4 it could easily take more than 30 minutes to assemble and run OCR.  Which leads me to this two part solution: 1) a raspberry pi that is connected to the scanner that collects scans and sends them to another hose, and 2) a process running on the host that would watch for new scans and process them.
+I was looking for a way to untether my Fujitsu ix500 from a laptop to make it a general networked scanner that would create searchable .pdf's and leave them on a network share.  Originally I tried running this solely on a Raspberry Pi (like [this](https://chrisschuld.com/2020/01/network-scanner-with-scansnap-and-raspberry-pi/)) but this was prohibitively slow.  Even on the Pi 4 it could easily take more than 30 minutes to assemble and run OCR.  Which leads me to this two part solution: 1) a raspberry pi that is connected to the scanner that collects scans and sends them to another hose, and 2) a process running on the host that would watch for new scans and process them.
 
 ## Detailed Flow
 
