@@ -4,13 +4,13 @@ import os
 import tempfile
 import shutil
 
-import scanman.scanman
+import scanman
 
-from scanman.scanman import Scanman
-from scanman.logpipe import LogPipe
+from scanman import Scanman
+from logpipe import LogPipe
 
 
-scanman.scanman.configure_logger()
+scanman.configure_logger()
 
 
 valid_scans = ["scan-1", "scan-2"]

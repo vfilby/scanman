@@ -32,7 +32,7 @@ docker-shell: docker runtime-config
 		scanman:development bash
 
 test:
-	python -m pytest -s ./tests/
+	PYTHONPATH=.:./scanman python -m pytest -s ./tests/
 
 env:
 	pipenv install
