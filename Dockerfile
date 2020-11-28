@@ -40,6 +40,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   git \
   vim \
   bash \
+  curl \
   bc
 
 # Copy virtual env from python-deps stage

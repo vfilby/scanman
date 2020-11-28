@@ -24,12 +24,15 @@ docker-run: docker runtime-config
 	docker run -it \
 		-v $(shell pwd)/runtime/intake:/scanman/intake \
 		-v $(shell pwd)/runtime/completed:/scanman/completed \
+
 		scanman:development
 
 docker-shell: docker runtime-config
 	docker run -it \
 		-v $(shell pwd)/runtime/intake:/scanman/intake \
 		-v $(shell pwd)/runtime/completed:/scanman/completed \
+		-v $(shell pwd)/test-data/test_complete_hook.sh:/scanman/post_pdf_script.sh \
+		-e PDF_COMPLETED_HOOK=/scanman/post_pdf_script.sh \
 		scanman:development bash
 
 test:
