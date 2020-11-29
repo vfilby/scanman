@@ -56,6 +56,11 @@ The included makefile has options for local or docker based dev.
 
 See the `Makefile` for more details.
 
+## Things that would be nice to add
+
+* automatically crop out white edges, currently recents are scanned as full sheets
+* attempt to detect the title/date for naming
+* add on error notification hooks
 
 ## Resources
 
