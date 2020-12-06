@@ -56,11 +56,20 @@ The included makefile has options for local or docker based dev.
 
 See the `Makefile` for more details.
 
+## Known Glitches/Problems
+
+* If the scanner jams scanbd will turn the light orange and stop scanning.  On the fujitsu I need to close and reopen the lid (essentially turn it off and on).  Not terrible but the partial scan will be saved and treated as if it is a full scan.
+* Oversized paper will not work (long receipts, etc). NOTE: This is kinda resolved, by setting a large paper height and swcrop (at least with the Fujitsu scanner) this seems to work, but slows the scanning process slightly.  sample scan script has been updated.
+
+
 ## Things that would be nice to add
 
+* add buttons to support different modes colour, greyscale, etc.
+* colour/BW auto detection. (Maybe convert from colour to greyscale in the processing?)
 * automatically crop out white edges, currently recents are scanned as full sheets
 * attempt to detect the title/date for naming
 * add on error notification hooks
+* Add a queue cleared notification.
 
 ## Resources
 
