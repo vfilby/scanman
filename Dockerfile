@@ -9,8 +9,9 @@ ENV PYTHONFAULTHANDLER 1
 
 # App specific env
 ENV SETTLE_DURATION=5
-ENV INTAKE_DIR=/scanman/intake
-ENV COMPLETED_DIR=/scanman/completed
+ENV APP_ROOT=/scantool
+ENV INTAKE_DIR=$APP_ROOT/intake
+ENV COMPLETED_DIR=$APP_ROOT/completed
 
 FROM base AS python-deps
 
@@ -27,6 +28,7 @@ RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
 FROM base AS runtime
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
+  ocrmypdf \ 
   netpbm \
   ghostscript \
   poppler-utils \
@@ -50,19 +52,30 @@ ENV PATH="/.venv/bin:$PATH"
 # Create and switch to a new user
 # disabling for now while I sort out how to handling permissions on the intake
 # volume
-#RUN useradd --create-home scanman
-#RUN mkdir /scanman && chown scanman scanman
-#USER scanman
+#RUN useradd --create-home scantool
+#RUN mkdir /scantool && chown scantool scantool
+#USER scantool
 
-RUN mkdir /scanman
+RUN mkdir $APP_ROOT
 
-WORKDIR /scanman
+WORKDIR $APP_ROOT
 
 # Install application into container
-COPY scanman /scanman/
-RUN mkdir -p /scanman/intake
-RUN mkdir -p /scanman/completed
+COPY scantool $APP_ROOT/
+RUN mkdir -p $INTAKE_DIR
+RUN mkdir -p $COMPLETED_DIR
+
+## HACK ALERT ##
+#
+# In some circumstances unpaper emits a warning to STDERR which is merged with STDOUT
+# by ocrmypdf.  This causes the version check to fail and ocrmypdf to think that
+# unpaper is not properly installed.  We will wrap the original binary in a script
+# that can filter out the warning.
+#
+# https://github.com/ocrmypdf/OCRmyPDF/issues/1409
+RUN mv /usr/bin/unpaper /usr/bin/unpaper-inner
+COPY unpaper-wrapper.sh /usr/bin/unpaper
+RUN chmod 755 /usr/bin/unpaper
 
 # Run the application
-#ENTRYPOINT ["python", "/scanman/scanman.py" ]
-CMD [ "python", "/scanman/scanman.py" ]
+CMD [ "python", "scantool.py" ]

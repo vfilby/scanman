@@ -42,6 +42,7 @@ class Scanman:
                         "', completed_path: '" + self.completed_path +
                         "', sleep_time: '" + str(self.sleep_time) +
                         "', delete_files: '" + str(self.delete_files) +"')" )
+        logging.debug( "PATH: %s", os.environ.get("PATH") )
 
     def get_scan_name( self, scan_path ):
         return os.path.basename( scan_path )
@@ -238,7 +239,7 @@ class Scanman:
 
 def configure_logger():
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.DEBUG,
         format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
         datefmt="%H:%M:%S",
         stream=sys.stdout)

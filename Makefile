@@ -12,31 +12,31 @@ local-run: runtime-config
 	INTAKE_DIR=runtime/intake \
 	COMPLETED_DIR=runtime/completed \
 	PDF_COMPLETED_HOOK="./test-data/test_complete_hook.sh" \
-	python scanman/scanman.py
+	python scantool/scantool.py
 
 docker:
-	docker build -t scanman:development .
+	docker build -t scantool:development .
 
 runtime-config:
 	mkdir -p runtime/intake runtime/completed
+	cp -R test-data/scan* runtime/intake
 
 docker-run: docker runtime-config
 	docker run -it \
-		-v $(shell pwd)/runtime/intake:/scanman/intake \
-		-v $(shell pwd)/runtime/completed:/scanman/completed \
-
-		scanman:development
+		-v $(shell pwd)/runtime/intake:/scantool/intake \
+		-v $(shell pwd)/runtime/completed:/scantool/completed \
+		scantool:development
 
 docker-shell: docker runtime-config
 	docker run -it \
-		-v $(shell pwd)/runtime/intake:/scanman/intake \
-		-v $(shell pwd)/runtime/completed:/scanman/completed \
-		-v $(shell pwd)/test-data/test_complete_hook.sh:/scanman/post_pdf_script.sh \
-		-e PDF_COMPLETED_HOOK=/scanman/post_pdf_script.sh \
-		scanman:development bash
+		-v $(shell pwd)/runtime/intake:/scantool/intake \
+		-v $(shell pwd)/runtime/completed:/scantool/completed \
+		-v $(shell pwd)/test-data/test_complete_hook.sh:/scantool/post_pdf_script.sh \
+		-e PDF_COMPLETED_HOOK=/scantool/post_pdf_script.sh \
+		scantool:development bash
 
 test:
-	PYTHONPATH=.:./scanman python -m pytest -s ./tests/
+	PYTHONPATH=.:./scantool python -m pytest -s ./tests/
 
 env:
 	pipenv install
