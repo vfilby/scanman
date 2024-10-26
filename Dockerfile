@@ -1,5 +1,5 @@
 # Grace à https://sourcery.ai/blog/python-docker/
-FROM python:3.9-slim-buster as base
+FROM python:3.11-slim-bookworm as base
 
 # Setup env
 ENV LANG C.UTF-8
