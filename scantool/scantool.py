@@ -19,7 +19,8 @@ from logpipe import LogPipe
 watch_path_env = "INTAKE_DIR"
 completed_path_env = "COMPLETED_DIR"
 pdf_completed_hook_env = "PDF_COMPLETED_HOOK"
-
+log_level_env = "LOG_LEVEL"
+rotate_pages_threshold_env = "ROTATE_PAGES_THRESHOLD"
 
 def consume_lines(pipe, consume):
     with pipe:
@@ -27,12 +28,19 @@ def consume_lines(pipe, consume):
             consume(line)
 
 class Scanman:
-    def __init__( self, watch_path = None, completed_path = None,
-                        sleep_time = 20, delete_files = True, pdf_completed_hook = None ):
+    def __init__( self, 
+                  watch_path = None,
+                  completed_path = None,
+                  sleep_time = 20, 
+                  rotate_pages_threshold = 15,
+                  delete_files = True, 
+                  pdf_completed_hook = None ):
+
         self.watch_path = watch_path
         self.completed_path = completed_path
         self.manifest_filename = "file_manifest"
         self.sleep_time = sleep_time or 30
+        self.rotate_pages_threshold = rotate_pages_threshold
         self.delete_files = delete_files
         self.pdf_completed_hook = pdf_completed_hook
 
@@ -41,6 +49,7 @@ class Scanman:
                         "watch_path: '" + self.watch_path +
                         "', completed_path: '" + self.completed_path +
                         "', sleep_time: '" + str(self.sleep_time) +
+                        "', rotate_pages_threshold: '" + str(self.rotate_pages_threshold) +
                         "', delete_files: '" + str(self.delete_files) +"')" )
         logging.debug( "PATH: %s", os.environ.get("PATH") )
 
@@ -190,7 +199,7 @@ class Scanman:
             ocrmypdf.ocr( input_pdf,
                           output_pdf,
                           rotate_pages=True,
-                          rotate_pages_threshold=13,
+                          rotate_pages_threshold=int(self.rotate_pages_threshold),
                           deskew=True,
                           clean=True )
 
@@ -237,15 +246,23 @@ class Scanman:
         return files
 
 
-def configure_logger():
+def configure_logger( log_level = logging.INFO ):
     logging.basicConfig(
-        level=logging.INFO,
+        level=log_level,
         format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
         datefmt="%H:%M:%S",
         stream=sys.stdout)
 
 if __name__ == "__main__":
-    configure_logger()
+
+    log_level = None
+    match os.getenv( log_level_env, 'INFO' ):
+        case 'DEBUG':
+            log_level = logging.DEBUG
+        case _:
+            log_level = logging.INFO
+
+    configure_logger( log_level )
 
     watch_path = os.environ.get(watch_path_env)
     if watch_path is None:
@@ -260,5 +277,6 @@ if __name__ == "__main__":
     s = Scanman( watch_path=watch_path,
                  completed_path=completed_path,
                  pdf_completed_hook=pdf_completed_hook,
+                 rotate_pages_threshold = os.getenv( rotate_pages_threshold_env, 15 ),
                  delete_files=True)
     s.run()
