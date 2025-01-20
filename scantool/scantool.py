@@ -21,6 +21,7 @@ completed_path_env = "COMPLETED_DIR"
 pdf_completed_hook_env = "PDF_COMPLETED_HOOK"
 log_level_env = "LOG_LEVEL"
 rotate_pages_threshold_env = "ROTATE_PAGES_THRESHOLD"
+skip_ocr_env = "COMBINE_ONLY"
 
 def consume_lines(pipe, consume):
     with pipe:
@@ -75,6 +76,8 @@ class Scanman:
         if not valid:
             logging.error( "Skipping '%s', files could not be verified." % scan_path )
             return
+        
+        skip_ocr = os.getenv(skip_ocr_env, "false").lower() in ("true", "1", "yes")
 
         logging.info( "Creating PDF in '%s'" % scan_path )
 
@@ -97,12 +100,18 @@ class Scanman:
             raise
 
         ## Step 2: Create a searchable PDF
-        logging.info( "Creating searchable pdf: %s" % out_path )
-        try:
-            self.create_searchable_pdf( combined_path, out_path )
-        except:
-            logging.error( "Error creating combined pdf" )
-            raise
+        if skip_ocr:
+            # We are bypassing OCR, likely beause it is happening in a downstream system
+            # such as paperless.  Just move the combined pdf to the output and move out with life.
+            logging.info( "Skipping OCR, copying to pdf: %s" % out_path )
+            shutil.move( combined_path, out_path )
+        else:
+            logging.info( "Creating searchable pdf: %s" % out_path )
+            try:
+                self.create_searchable_pdf( combined_path, out_path )
+            except:
+                logging.error( "Error creating combined pdf" )
+                raise
 
         if self.delete_files:
             logging.info( "Cleaning out '%s'" % scan_path )

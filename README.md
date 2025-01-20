@@ -19,6 +19,9 @@ All of this happens on a Raspberry Pi attached to scanner via USB
 3. If the files can be verified the script will combine the images with `img2pdf` and make it searchable with `ocrmypdf`
 4. Once the .pdf is complete it will move the file to a `completed directory` and delete the source image files
 
+Note that you can completely bypass the OCR stage by setting the environment variable COMBINE_ONLY to "True".  This is useful if you plan on using a 
+more complex system downstream like paperless-ngx.
+
 ## Development
 
 **Dependencies**
